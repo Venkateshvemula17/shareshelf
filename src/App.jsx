@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownUp, ArrowRight, BookOpen, Bookmark, Check, ChevronDown,
   CircleHelp, Clock3, Filter, GraduationCap, Heart, Leaf, LibraryBig,
@@ -18,18 +18,43 @@ const initialItems = [
 const categories = ['Everything', 'Textbooks', 'Study notes', 'Exam prep', 'Supplies']
 const modes = ['All types', 'Borrow', 'Lend', 'Swap', 'Give away']
 
+function readStoredArray(key, fallback) {
+  try {
+    const value = localStorage.getItem(key)
+    return value ? JSON.parse(value) : fallback
+  } catch {
+    return fallback
+  }
+}
+
 function App() {
-  const [items, setItems] = useState(initialItems)
+  const [items, setItems] = useState(() => readStoredArray('shareshelf-items', initialItems))
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('Everything')
   const [mode, setMode] = useState('All types')
   const [activeNav, setActiveNav] = useState('Discover')
-  const [saved, setSaved] = useState([])
+  const [saved, setSaved] = useState(() => readStoredArray('shareshelf-saved', []))
   const [modal, setModal] = useState(false)
   const [detail, setDetail] = useState(null)
   const [toast, setToast] = useState('')
   const [mobileMenu, setMobileMenu] = useState(false)
   const [form, setForm] = useState({ title: '', category: 'Textbooks', subject: '', mode: 'Borrow', description: '', location: '' })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('shareshelf-items', JSON.stringify(items))
+    } catch {
+      // The app remains usable if browser storage is unavailable.
+    }
+  }, [items])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('shareshelf-saved', JSON.stringify(saved))
+    } catch {
+      // The app remains usable if browser storage is unavailable.
+    }
+  }, [saved])
 
   const notify = (message) => {
     setToast(message)
@@ -65,12 +90,12 @@ function App() {
     setQuery('')
     setForm({ title: '', category: 'Textbooks', subject: '', mode: 'Borrow', description: '', location: '' })
     setModal(false)
-    notify('Your listing was added to this demo!')
+    notify('Your listing was saved in this browser!')
   }
 
   const requestItem = (item) => {
     setDetail(null)
-    notify(`Request noted for “${item.title}” — messaging comes next!`)
+    notify(`Demo only: a request for “${item.title}” was not sent.`)
   }
 
   return (
